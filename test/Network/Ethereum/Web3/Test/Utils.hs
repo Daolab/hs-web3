@@ -81,7 +81,7 @@ withPrimaryEthereumAccount = withAccounts (pure . head)
 callFromTo :: Address -> Address -> Call
 callFromTo from to =
     def { callFrom = Just from
-        , callTo   = to
+        , callTo   = Just to
         , callGasPrice = Just 4000000000
         }
 

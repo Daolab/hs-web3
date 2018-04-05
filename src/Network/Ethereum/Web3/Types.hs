@@ -174,7 +174,7 @@ $(deriveJSON (defaultOptions
 -- | The contract call params
 data Call = Call
   { callFrom     :: !(Maybe Address)
-  , callTo       :: !Address
+  , callTo       :: !(Maybe Address)
   , callGas      :: !(Maybe Quantity)
   , callGasPrice :: !(Maybe Quantity)
   , callValue    :: !(Maybe Quantity) -- expressed in wei
@@ -186,7 +186,7 @@ $(deriveJSON (defaultOptions
     , omitNothingFields = True }) ''Call)
 
 instance Default Call where
-    def = Call Nothing zero (Just 3000000) Nothing (Just 0) Nothing
+    def = Call Nothing Nothing (Just 3000000) Nothing (Just 0) Nothing
 
 
 -- | The contract call mode describe used state: latest or pending
@@ -257,6 +257,30 @@ data Transaction = Transaction
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 2 }) ''Transaction)
+
+-- | Transaction information
+data TxReceipt = TxReceipt
+  { txrBlockHash        :: !Text
+  -- ^ DATA, 32 Bytes - hash of the block where this transaction was in. null when its pending.
+  , txrBlockNumber      :: !BlockNumber
+  -- ^ QUANTITY - block number where this transaction was in. null when its pending.
+  , txrTransactionIndex :: !Text
+  , txrTransactionHash  :: !Text
+  -- ^ QUANTITY - integer of the transactions index position in the block. null when its pending.
+  , txrCumulativeGasUsed            :: !Text
+  -- ^ QUANTITY - value transferred in Wei.
+  , txrGasUsed         :: !Text
+  -- ^ QUANTITY - gas price provided by the sender in Wei.
+  , txrContractAddress              :: !(Maybe Address)
+  -- ^ QUANTITY - gas provided by the sender.
+  , txrLogs            :: ![Text]
+  , txrLogsBloom       :: !(Maybe Text)
+  , txrStatus          :: !Int
+  -- ^ DATA - the data send along with the transaction.
+  } deriving (Show, Generic)
+
+$(deriveJSON (defaultOptions
+    { fieldLabelModifier = toLowerFirst . drop 3 }) ''TxReceipt)
 
 -- | Block information
 data Block = Block
