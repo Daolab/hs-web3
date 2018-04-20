@@ -1,5 +1,5 @@
 # Resolver to choose a 'specific' stackage snapshot or a compiler version.
-resolver: lts-10.3
+resolver: lts-11.1
 # User packages to be built.
 packages:
 - '.'
@@ -19,6 +19,7 @@ flags: {}
 extra-package-dbs: []
 # Dependencies bounds
 pvp-bounds: both
+allow-newer: true
 # Nix integration
 nix:
     packages: [ zlib ]

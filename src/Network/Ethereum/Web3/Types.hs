@@ -275,7 +275,7 @@ data TxReceipt = TxReceipt
   -- ^ QUANTITY - gas provided by the sender.
   , txrLogs            :: ![Text]
   , txrLogsBloom       :: !(Maybe Text)
-  , txrStatus          :: !Int
+  , txrStatus          :: !Text
   -- ^ DATA - the data send along with the transaction.
   } deriving (Show, Generic)
 
