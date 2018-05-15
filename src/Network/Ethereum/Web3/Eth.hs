@@ -80,6 +80,11 @@ getCode :: Address -> DefaultBlock -> Web3 Text
 {-# INLINE getCode #-}
 getCode = remote "eth_getCode"
 
+-- | List a number of accounts starting at an offset address.
+listAccounts :: Int -> Maybe Address -> DefaultBlock -> Web3 [Address]
+{-# INLINE listAccounts #-}
+listAccounts = remote "parity_listAccounts"
+
 -- | Returns an Ethereum specific signature with:
 -- sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
 sign :: Address -> Text -> Web3 Text

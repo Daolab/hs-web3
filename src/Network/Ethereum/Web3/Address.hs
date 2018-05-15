@@ -34,10 +34,7 @@ import           GHC.Generics               (Generic)
 
 -- | Ethereum account address
 newtype Address = Address { unAddress :: Integer }
-  deriving (Eq, Ord, Generic)
-
-instance Show Address where
-    show = unpack . toText
+  deriving (Eq, Ord, Generic, Show, Read)
 
 instance IsString Address where
   fromString a = case fromText (pack a) of
