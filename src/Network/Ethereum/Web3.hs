@@ -45,6 +45,7 @@ module Network.Ethereum.Web3 (
   -- ** Ethereum unit conversion utils
   , module Network.Ethereum.Unit
   , IndexedEvent(..)
+  , batchCall
   ) where
 
 import           Network.Ethereum.Unit
@@ -58,3 +59,4 @@ import           Network.Ethereum.Web3.Encoding.Int
 import           Network.Ethereum.Web3.Encoding.Vector
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
+import           Network.Ethereum.Web3.JsonRpc (batchCall)

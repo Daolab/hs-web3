@@ -16,6 +16,8 @@ import           Network.Ethereum.Web3.Address
 import           Network.Ethereum.Web3.JsonRpc
 import           Network.Ethereum.Web3.Provider
 import           Network.Ethereum.Web3.Types
+import Data.Aeson
+import Data.Vector (fromList)
 
 -- | Returns the current ethereum protocol version.
 protocolVersion :: Web3 Text
@@ -79,6 +81,13 @@ getUncleCountByBlockNumber = remote "eth_getUncleCountByBlockNumber"
 getCode :: Address -> DefaultBlock -> Web3 Text
 {-# INLINE getCode #-}
 getCode = remote "eth_getCode"
+
+getCodeReq :: Address -> DefaultBlock -> Request
+getCodeReq address blockNumber = Request
+    { rqMethod = "eth_getCode"
+    , rqId     = 1
+    , rqParams =  Array $ fromList [toJSON address, toJSON blockNumber]
+    }
 
 -- | List a number of accounts starting at an offset address.
 listAccounts :: Int -> Maybe Address -> DefaultBlock -> Web3 [Address]

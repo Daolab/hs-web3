@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- |
 -- Module      :  Network.JsonRpc
 -- Copyright   :  Alexander Krupenkin 2016
@@ -16,6 +17,8 @@ module Network.Ethereum.Web3.JsonRpc (
     remote
   , MethodName
   , ServerUri
+  , batchCall
+  , Request(..)
   ) where
 
 import           Network.Ethereum.Web3.Provider
@@ -54,6 +57,49 @@ remote n = remote_ (call . Array . fromList)
                      , method = "POST" }
         liftIO $ responseBody <$> httpLbs request' manager
 
+-- mkRequest :: Remote a => MethodName -> a
+-- batchWeb3 :: [a] -> [ReaderT (String, Manager) IO ByteString]
+-- batchWeb3 = callRPC . (map mkRequest)
+
+-- mkRequest :: (VarArgReq a) => MethodName -> a
+-- mkRequest n = varReq_ (call . Array . fromList)
+--   where
+--     call = Request n 1
+
+-- syncReq = Request
+--     { rqMethod = "eth_syncing"
+--     , rqId     = 1
+--     , rqParams = Array $ fromList [] }
+
+batchCall :: (FromJSON a) => [Request] -> Web3 [a]
+batchCall reqs = Web3 $ do
+    x <- callRPC reqs
+    d <- case eitherDecode x of
+        Left e -> error $ show e
+        Right x -> pure x
+    let bss = (d :: [Response])
+    pure $ map (\(Right s)-> s) $ map p $ map rsResult bss
+    where
+        p c = do
+            x <- c
+            pure $ case fromJSON x of
+                Success r -> r
+                Error e -> error $ show e
+
+
+callRPC :: [Request] -> ReaderT (String, Manager) IO ByteString
+callRPC requests = (call . Array . fromList) $ map toJSON requests -- (zip [1..] requests)
+    where
+    call request = connection $ encode $ request
+    connection body = do
+        (uri, manager) <- ask
+        request <- parseRequest uri
+        let request' = request
+                        { requestBody = RequestBodyLBS body
+                        , requestHeaders = [("Content-Type", "application/json")]
+                        , method = "POST" }
+        liftIO $ responseBody <$> httpLbs request' manager
+
 decodeResponse :: FromJSON a => ByteString -> IO a
 decodeResponse = tryParse . eitherDecode
              >=> tryJsonRpc . rsResult
@@ -62,6 +108,18 @@ decodeResponse = tryParse . eitherDecode
         tryJsonRpc = either (throwIO . JsonRpcFail) return
         tryParse :: Either String a -> IO a
         tryParse = either (throwIO . ParserFail) return
+
+
+
+class VarArgReq a where
+    varReq_ :: ([Value] -> Request) -> a
+
+instance (ToJSON a, VarArgReq b) => VarArgReq (a -> b) where
+    varReq_ f x = varReq_ (\xs -> f (toJSON x : xs))
+
+
+-- instance VarArgReq Request where
+--     varReq_ f = Web3 ((liftIO . decodeResponse) =<< f [])
 
 class Remote a where
     remote_ :: ([Value] -> ReaderT (ServerUri, Manager) IO ByteString) -> a

@@ -118,6 +118,7 @@ instance FromJSON BlockNumber where
         case R.hexadecimal v of
             Right (x, "") -> return (BlockNumber x)
             _             -> fail "Unable to parse BlockNumber!"
+    parseJSON (Number v) = pure $ BlockNumber $ round v
     parseJSON _ = fail "The string is required!"
 
 instance ToJSON BlockNumber where
@@ -253,7 +254,7 @@ data Transaction = Transaction
   -- ^ QUANTITY - gas provided by the sender.
   , txInput            :: !Text
   -- ^ DATA - the data send along with the transaction.
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 $(deriveJSON (defaultOptions
     { fieldLabelModifier = toLowerFirst . drop 2 }) ''Transaction)
