@@ -39,6 +39,8 @@ import           Network.HTTP.Client            (Manager,
                                                  requestBody, requestHeaders,
                                                  responseBody)
 
+import Debug.Trace
+
 -- | Name of called method.
 type MethodName = Text
 
@@ -55,7 +57,12 @@ remote n = remote_ (call . Array . fromList)
                      { requestBody = RequestBodyLBS body
                      , requestHeaders = [("Content-Type", "application/json")]
                      , method = "POST" }
-        liftIO $ responseBody <$> httpLbs request' manager
+        -- liftIO $ putStr "RPCRequest: "
+        -- liftIO $ print body
+        r <- liftIO $ responseBody <$> httpLbs request' manager
+        -- liftIO $ putStr "RPCResponse: "
+        -- liftIO $ print r
+        pure r
 
 -- mkRequest :: Remote a => MethodName -> a
 -- batchWeb3 :: [a] -> [ReaderT (String, Manager) IO ByteString]
@@ -90,7 +97,7 @@ batchCall reqs = Web3 $ do
 callRPC :: [Request] -> ReaderT (String, Manager) IO ByteString
 callRPC requests = (call . Array . fromList) $ map toJSON requests -- (zip [1..] requests)
     where
-    call request = connection $ encode $ request
+    call request = connection $ encode $ (\x-> trace (show x) x) $ request
     connection body = do
         (uri, manager) <- ask
         request <- parseRequest uri
@@ -98,12 +105,15 @@ callRPC requests = (call . Array . fromList) $ map toJSON requests -- (zip [1..]
                         { requestBody = RequestBodyLBS body
                         , requestHeaders = [("Content-Type", "application/json")]
                         , method = "POST" }
-        liftIO $ responseBody <$> httpLbs request' manager
+        r <- liftIO $ responseBody <$> httpLbs request' manager
+        liftIO $ print "callRPC"
+        liftIO $ print r
+        pure r
 
 decodeResponse :: FromJSON a => ByteString -> IO a
 decodeResponse = tryParse . eitherDecode
              >=> tryJsonRpc . rsResult
-             >=> tryParse . eitherDecode . encode
+             >=> tryParse . eitherDecode . encode -- . (\x->trace (show x) x)
   where tryJsonRpc :: Either RpcError a -> IO a
         tryJsonRpc = either (throwIO . JsonRpcFail) return
         tryParse :: Either String a -> IO a
